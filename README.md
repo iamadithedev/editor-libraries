@@ -1,1 +1,1 @@
-# editor-libraries
+# C++ Editor Libraries
