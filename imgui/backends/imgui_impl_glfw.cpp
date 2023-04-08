@@ -110,7 +110,7 @@ struct ImGui_ImplGlfw_Data
 {
     GLFWwindow*             Window;
     GlfwClientApi           ClientApi;
-    double                  Time;
+    float                   Time;
     GLFWwindow*             MouseWindow;
     GLFWcursor*             MouseCursors[ImGuiMouseCursor_COUNT];
     ImVec2                  LastValidMousePos;
@@ -664,7 +664,7 @@ static void ImGui_ImplGlfw_UpdateMouseCursor()
 // Update gamepad inputs
 static inline float Saturate(float v) { return v < 0.0f ? 0.0f : v  > 1.0f ? 1.0f : v; }
 
-void ImGui_ImplGlfw_NewFrame()
+void ImGui_ImplGlfw_NewFrame(float total_time)
 {
     ImGuiIO& io = ImGui::GetIO();
     ImGui_ImplGlfw_Data* bd = ImGui_ImplGlfw_GetBackendData();
@@ -680,8 +680,8 @@ void ImGui_ImplGlfw_NewFrame()
         io.DisplayFramebufferScale = ImVec2((float)display_w / (float)w, (float)display_h / (float)h);
 
     // Setup time step
-    double current_time = glfwGetTime();
-    io.DeltaTime = bd->Time > 0.0 ? (float)(current_time - bd->Time) : (float)(1.0f / 60.0f);
+    float current_time = total_time;
+    io.DeltaTime = bd->Time > 0.0 ? current_time - bd->Time : (1.0f / 60.0f);
     bd->Time = current_time;
 
     ImGui_ImplGlfw_UpdateMouseData();
