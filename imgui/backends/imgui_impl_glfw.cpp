@@ -616,7 +616,7 @@ static void ImGui_ImplGlfw_UpdateMouseCursor()
 // Update gamepad inputs
 static inline float Saturate(float v) { return v < 0.0f ? 0.0f : v  > 1.0f ? 1.0f : v; }
 
-void ImGui_ImplGlfw_NewFrame(float total_time)
+void ImGui_ImplGlfw_NewFrame(int display_w, int display_h, float total_time)
 {
     ImGuiIO& io = ImGui::GetIO();
     ImGui_ImplGlfw_Data* bd = ImGui_ImplGlfw_GetBackendData();
@@ -624,9 +624,7 @@ void ImGui_ImplGlfw_NewFrame(float total_time)
 
     // Setup display size (every frame to accommodate for window resizing)
     int w, h;
-    int display_w, display_h;
     glfwGetWindowSize(bd->Window, &w, &h);
-    glfwGetFramebufferSize(bd->Window, &display_w, &display_h);
     io.DisplaySize = ImVec2((float)w, (float)h);
     if (w > 0 && h > 0)
         io.DisplayFramebufferScale = ImVec2((float)display_w / (float)w, (float)display_h / (float)h);
