@@ -16,13 +16,6 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 
-// Clang warnings with -Weverything
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wold-style-cast"     // warning: use of old-style cast
-#pragma clang diagnostic ignored "-Wsign-conversion"    // warning: implicit conversion changes signedness
-#endif
-
 // GLFW
 #include <GLFW/glfw3.h>
 
@@ -30,15 +23,6 @@
 #undef APIENTRY
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>   // for glfwGetWin32Window()
-#endif
-#ifdef __APPLE__
-#define GLFW_EXPOSE_NATIVE_COCOA
-#include <GLFW/glfw3native.h>   // for glfwGetCocoaWindow()
-#endif
-
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#include <emscripten/html5.h>
 #endif
 
 // We gather version tests as define in order to easily see which features are version-dependent.
@@ -202,18 +186,6 @@ static ImGuiKey ImGui_ImplGlfw_KeyToImGuiKey(int key)
         case GLFW_KEY_X: return ImGuiKey_X;
         case GLFW_KEY_Y: return ImGuiKey_Y;
         case GLFW_KEY_Z: return ImGuiKey_Z;
-        case GLFW_KEY_F1: return ImGuiKey_F1;
-        case GLFW_KEY_F2: return ImGuiKey_F2;
-        case GLFW_KEY_F3: return ImGuiKey_F3;
-        case GLFW_KEY_F4: return ImGuiKey_F4;
-        case GLFW_KEY_F5: return ImGuiKey_F5;
-        case GLFW_KEY_F6: return ImGuiKey_F6;
-        case GLFW_KEY_F7: return ImGuiKey_F7;
-        case GLFW_KEY_F8: return ImGuiKey_F8;
-        case GLFW_KEY_F9: return ImGuiKey_F9;
-        case GLFW_KEY_F10: return ImGuiKey_F10;
-        case GLFW_KEY_F11: return ImGuiKey_F11;
-        case GLFW_KEY_F12: return ImGuiKey_F12;
         default: return ImGuiKey_None;
     }
 }
@@ -451,7 +423,6 @@ static bool ImGui_ImplGlfw_Init(GLFWwindow* window, bool install_callbacks, Glfw
 {
     ImGuiIO& io = ImGui::GetIO();
     IM_ASSERT(io.BackendPlatformUserData == nullptr && "Already initialized a platform backend!");
-    //printf("GLFW_VERSION: %d.%d.%d (%d)", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR, GLFW_VERSION_REVISION, GLFW_VERSION_COMBINED);
 
     // Setup backend capabilities flags
     ImGui_ImplGlfw_Data* bd = IM_NEW(ImGui_ImplGlfw_Data)();
@@ -496,21 +467,11 @@ static bool ImGui_ImplGlfw_Init(GLFWwindow* window, bool install_callbacks, Glfw
     // Chain GLFW callbacks: our callbacks will call the user's previously installed callbacks, if any.
     if (install_callbacks)
         ImGui_ImplGlfw_InstallCallbacks(window);
-    // Register Emscripten Wheel callback to workaround issue in Emscripten GLFW Emulation (#6096)
-    // We intentionally do not check 'if (install_callbacks)' here, as some users may set it to false and call GLFW callback themselves.
-    // FIXME: May break chaining in case user registered their own Emscripten callback?
-#ifdef __EMSCRIPTEN__
-    emscripten_set_wheel_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, NULL, false, ImGui_ImplEmscripten_WheelCallback);
-#endif
 
     // Set platform dependent data in viewport
     ImGuiViewport* main_viewport = ImGui::GetMainViewport();
 #ifdef _WIN32
     main_viewport->PlatformHandleRaw = glfwGetWin32Window(bd->Window);
-#elif defined(__APPLE__)
-    main_viewport->PlatformHandleRaw = (void*)glfwGetCocoaWindow(bd->Window);
-#else
-    IM_UNUSED(main_viewport);
 #endif
 
     bd->ClientApi = client_api;
@@ -525,11 +486,6 @@ bool ImGui_ImplGlfw_InitForOpenGL(GLFWwindow* window, bool install_callbacks)
 bool ImGui_ImplGlfw_InitForVulkan(GLFWwindow* window, bool install_callbacks)
 {
     return ImGui_ImplGlfw_Init(window, install_callbacks, GlfwClientApi_Vulkan);
-}
-
-bool ImGui_ImplGlfw_InitForOther(GLFWwindow* window, bool install_callbacks)
-{
-    return ImGui_ImplGlfw_Init(window, install_callbacks, GlfwClientApi_Unknown);
 }
 
 void ImGui_ImplGlfw_Shutdown()
@@ -564,11 +520,8 @@ static void ImGui_ImplGlfw_UpdateMouseData()
     {
         GLFWwindow* window = bd->Window;
 
-#ifdef __EMSCRIPTEN__
-        const bool is_window_focused = true;
-#else
         const bool is_window_focused = glfwGetWindowAttrib(window, GLFW_FOCUSED) != 0;
-#endif
+
         if (is_window_focused)
         {
             // (Optional) Set OS mouse position from Dear ImGui if requested (rarely used, only when ImGuiConfigFlags_NavEnableSetMousePos is enabled by user)
@@ -637,7 +590,3 @@ void ImGui_ImplGlfw_NewFrame(int display_w, int display_h, float total_time)
     ImGui_ImplGlfw_UpdateMouseData();
     ImGui_ImplGlfw_UpdateMouseCursor();
 }
-
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
