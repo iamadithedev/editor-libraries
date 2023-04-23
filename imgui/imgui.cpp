@@ -3174,17 +3174,12 @@ float ImGui::CalcWrapWidthForPos(const ImVec2& pos, float wrap_pos_x)
 // IM_ALLOC() == ImGui::MemAlloc()
 void* ImGui::MemAlloc(size_t size)
 {
-    if (ImGuiContext* ctx = GImGui)
-        ctx->IO.MetricsActiveAllocations++;
     return (*GImAllocatorAllocFunc)(size, GImAllocatorUserData);
 }
 
 // IM_FREE() == ImGui::MemFree()
 void ImGui::MemFree(void* ptr)
 {
-    if (ptr)
-        if (ImGuiContext* ctx = GImGui)
-            ctx->IO.MetricsActiveAllocations--;
     return (*GImAllocatorFreeFunc)(ptr, GImAllocatorUserData);
 }
 
@@ -3699,7 +3694,6 @@ void ImGui::NewFrame()
         g.DebugLocateId = 0;
     if (g.DebugLogClipperAutoDisableFrames > 0 && --g.DebugLogClipperAutoDisableFrames == 0)
     {
-        DebugLog("(Auto-disabled ImGuiDebugLogFlags_EventClipper to avoid spamming)\n");
         g.DebugLogFlags &= ~ImGuiDebugLogFlags_EventClipper;
     }
 
@@ -3788,7 +3782,7 @@ static void AddWindowToDrawData(ImGuiWindow* window, int layer)
 {
     ImGuiContext& g = *GImGui;
     ImGuiViewportP* viewport = g.Viewports[0];
-    g.IO.MetricsRenderWindows++;
+
     AddDrawListToDrawData(&viewport->DrawDataBuilder.Layers[layer], window->DrawList);
     for (int i = 0; i < window->DC.ChildWindows.Size; i++)
     {
@@ -4030,7 +4024,6 @@ void ImGui::EndFrame()
     // This usually assert if there is a mismatch between the ImGuiWindowFlags_ChildWindow / ParentWindow values and DC.ChildWindows[] in parents, aka we've done something wrong.
     IM_ASSERT(g.Windows.Size == g.WindowsTempSortBuffer.Size);
     g.Windows.swap(g.WindowsTempSortBuffer);
-    g.IO.MetricsActiveWindows = g.WindowsActiveCount;
 
     // Unlock font atlas
     g.IO.Fonts->Locked = false;
@@ -4055,7 +4048,6 @@ void ImGui::Render()
         EndFrame();
     const bool first_render_of_frame = (g.FrameCountRendered != g.FrameCount);
     g.FrameCountRendered = g.FrameCount;
-    g.IO.MetricsRenderWindows = 0;
 
     CallContextHooks(&g, ImGuiContextHookType_RenderPre);
 
@@ -4092,7 +4084,6 @@ void ImGui::Render()
         RenderMouseCursor(g.IO.MousePos, g.Style.MouseCursorScale, g.MouseCursor, IM_COL32_WHITE, IM_COL32_BLACK, IM_COL32(0, 0, 0, 48));
 
     // Setup ImDrawData structures for end-user
-    g.IO.MetricsRenderVertices = g.IO.MetricsRenderIndices = 0;
     for (int n = 0; n < g.Viewports.Size; n++)
     {
         ImGuiViewportP* viewport = g.Viewports[n];
@@ -4104,8 +4095,6 @@ void ImGui::Render()
 
         SetupViewportDrawData(viewport, &viewport->DrawDataBuilder.Layers[0]);
         ImDrawData* draw_data = &viewport->DrawDataP;
-        g.IO.MetricsRenderVertices += draw_data->TotalVtxCount;
-        g.IO.MetricsRenderIndices += draw_data->TotalIdxCount;
     }
 
     CallContextHooks(&g, ImGuiContextHookType_RenderPost);
@@ -11966,42 +11955,6 @@ static void SetPlatformImeDataFn_DefaultImpl(ImGuiViewport* viewport, ImGuiPlatf
 static void SetPlatformImeDataFn_DefaultImpl(ImGuiViewport*, ImGuiPlatformImeData*) {}
 
 #endif
-
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
-
-//-----------------------------------------------------------------------------
-// [SECTION] DEBUG LOG WINDOW
-//-----------------------------------------------------------------------------
-
-void ImGui::DebugLog(const char* fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    DebugLogV(fmt, args);
-    va_end(args);
-}
-
-void ImGui::DebugLogV(const char* fmt, va_list args)
-{
-    ImGuiContext& g = *GImGui;
-    const int old_size = g.DebugLogBuf.size();
-    g.DebugLogBuf.appendf("[%05d] ", g.FrameCount);
-    g.DebugLogBuf.appendfv(fmt, args);
-    if (g.DebugLogFlags & ImGuiDebugLogFlags_OutputToTTY)
-        IMGUI_DEBUG_PRINTF("%s", g.DebugLogBuf.begin() + old_size);
-    g.DebugLogIndex.append(g.DebugLogBuf.c_str(), old_size, g.DebugLogBuf.size());
-}
-
-//-----------------------------------------------------------------------------
-// [SECTION] OTHER DEBUG TOOLS (ITEM PICKER, STACK TOOL)
-//-----------------------------------------------------------------------------
-
-#else
-
-void ImGui::DebugLog(const char*, ...) {}
-void ImGui::DebugLogV(const char*, va_list) {}
-
-#endif // #ifndef IMGUI_DISABLE_DEBUG_TOOLS
 
 //-----------------------------------------------------------------------------
 
