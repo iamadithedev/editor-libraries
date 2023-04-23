@@ -779,16 +779,6 @@ namespace ImGui
     IMGUI_API bool          TabItemButton(const char* label, ImGuiTabItemFlags flags = 0);      // create a Tab behaving like a button. return true when clicked. cannot be selected in the tab bar.
     IMGUI_API void          SetTabItemClosed(const char* tab_or_docked_window_label);           // notify TabBar or Docking system of a closed tab/window ahead (useful to reduce visual flicker on reorderable tab bars). For tab-bar: call after BeginTabBar() and before Tab submissions. Otherwise call with a window name.
 
-    // Logging/Capture
-    // - All text output from the interface can be captured into tty/file/clipboard. By default, tree nodes are automatically opened during logging.
-    IMGUI_API void          LogToTTY(int auto_open_depth = -1);                                 // start logging to tty (stdout)
-    IMGUI_API void          LogToFile(int auto_open_depth = -1, const char* filename = NULL);   // start logging to file
-    IMGUI_API void          LogToClipboard(int auto_open_depth = -1);                           // start logging to OS clipboard
-    IMGUI_API void          LogFinish();                                                        // stop logging (close file, etc.)
-    IMGUI_API void          LogButtons();                                                       // helper to display buttons for logging to tty/file/clipboard
-    IMGUI_API void          LogText(const char* fmt, ...) IM_FMTARGS(1);                        // pass text data straight to log (without being displayed)
-    IMGUI_API void          LogTextV(const char* fmt, va_list args) IM_FMTLIST(1);
-
     // Drag and Drop
     // - On source items, call BeginDragDropSource(), if it returns true also call SetDragDropPayload() + EndDragDropSource().
     // - On target candidates, call BeginDragDropTarget(), if it returns true also call AcceptDragDropPayload() + EndDragDropTarget().

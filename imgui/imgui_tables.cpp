@@ -1783,10 +1783,6 @@ void ImGui::TableEndRow(ImGuiTable* table)
     if (table->CurrentColumn != -1)
         TableEndCell(table);
 
-    // Logging
-    if (g.LogEnabled)
-        LogRenderedText(NULL, "|");
-
     // Position cursor at the bottom of our row so it can be used for e.g. clipping calculation. However it is
     // likely that the next call to TableBeginCell() will reposition the cursor to take account of vertical padding.
     window->DC.CursorPos.y = table->RowPosY2;
@@ -2024,7 +2020,6 @@ void ImGui::TableBeginCell(ImGuiTable* table, int column_n)
     ImGuiContext& g = *GImGui;
     if (g.LogEnabled && !column->IsSkipItems)
     {
-        LogRenderedText(&window->DC.CursorPos, "|");
         g.LogLinePosY = FLT_MAX;
     }
 }

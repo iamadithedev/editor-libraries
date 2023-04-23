@@ -702,8 +702,6 @@ bool ImGui::ButtonEx(const char* label, const ImVec2& size_arg, ImGuiButtonFlags
     RenderNavHighlight(bb, id);
     RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
 
-    if (g.LogEnabled)
-        LogSetNextTextDecoration("[", "]");
     RenderTextClipped(bb.Min + style.FramePadding, bb.Max - style.FramePadding, label, NULL, &label_size, style.ButtonTextAlign, &bb);
 
     return pressed;
@@ -1105,8 +1103,7 @@ bool ImGui::Checkbox(const char* label, bool* v)
     }
 
     ImVec2 label_pos = ImVec2(check_bb.Max.x + style.ItemInnerSpacing.x, check_bb.Min.y + style.FramePadding.y);
-    if (g.LogEnabled)
-        LogRenderedText(&label_pos, mixed_value ? "[~]" : *v ? "[x]" : "[ ]");
+
     if (label_size.x > 0.0f)
         RenderText(label_pos, label);
 
@@ -1207,8 +1204,7 @@ bool ImGui::RadioButton(const char* label, bool active)
     }
 
     ImVec2 label_pos = ImVec2(check_bb.Max.x + style.ItemInnerSpacing.x, check_bb.Min.y + style.FramePadding.y);
-    if (g.LogEnabled)
-        LogRenderedText(&label_pos, active ? "(x)" : "( )");
+
     if (label_size.x > 0.0f)
         RenderText(label_pos, label);
 
@@ -1368,8 +1364,6 @@ void ImGui::SeparatorEx(ImGuiSeparatorFlags flags)
 
         // Draw
         window->DrawList->AddRectFilled(bb.Min, bb.Max, GetColorU32(ImGuiCol_Separator));
-        if (g.LogEnabled)
-            LogText(" |");
     }
     else if (flags & ImGuiSeparatorFlags_Horizontal)
     {
@@ -1403,8 +1397,6 @@ void ImGui::SeparatorEx(ImGuiSeparatorFlags flags)
         {
             // Draw
             window->DrawList->AddRectFilled(bb.Min, bb.Max, GetColorU32(ImGuiCol_Separator));
-            if (g.LogEnabled)
-                LogRenderedText(&bb.Min, "--------------------------------\n");
 
         }
         if (columns)
@@ -1465,14 +1457,11 @@ void ImGui::SeparatorTextEx(ImGuiID id, const char* label, const char* label_end
             window->DrawList->AddLine(ImVec2(sep1_x1, seps_y), ImVec2(sep1_x2, seps_y), separator_col, separator_thickness);
         if (sep2_x2 > sep2_x1 && separator_thickness > 0.0f)
             window->DrawList->AddLine(ImVec2(sep2_x1, seps_y), ImVec2(sep2_x2, seps_y), separator_col, separator_thickness);
-        if (g.LogEnabled)
-            LogSetNextTextDecoration("---", NULL);
+
         RenderTextEllipsis(window->DrawList, label_pos, ImVec2(bb.Max.x, bb.Max.y + style.ItemSpacing.y), bb.Max.x, bb.Max.x, label, label_end, &label_size);
     }
     else
     {
-        if (g.LogEnabled)
-            LogText("---");
         if (separator_thickness > 0.0f)
             window->DrawList->AddLine(ImVec2(sep1_x1, seps_y), ImVec2(sep2_x2, seps_y), separator_col, separator_thickness);
     }
@@ -1684,8 +1673,6 @@ bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboF
     // Render preview and label
     if (preview_value != NULL && !(flags & ImGuiComboFlags_NoPreview))
     {
-        if (g.LogEnabled)
-            LogSetNextTextDecoration("{", "}");
         RenderTextClipped(bb.Min + style.FramePadding, ImVec2(value_x2, bb.Max.y), preview_value, NULL, NULL);
     }
     if (label_size.x > 0)
@@ -2416,8 +2403,7 @@ bool ImGui::DragScalar(const char* label, ImGuiDataType data_type, void* p_data,
     // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
     char value_buf[64];
     const char* value_buf_end = value_buf + DataTypeFormatString(value_buf, IM_ARRAYSIZE(value_buf), data_type, p_data, format);
-    if (g.LogEnabled)
-        LogSetNextTextDecoration("{", "}");
+
     RenderTextClipped(frame_bb.Min, frame_bb.Max, value_buf, value_buf_end, NULL, ImVec2(0.5f, 0.5f));
 
     if (label_size.x > 0.0f)
@@ -3003,8 +2989,7 @@ bool ImGui::SliderScalar(const char* label, ImGuiDataType data_type, void* p_dat
     // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
     char value_buf[64];
     const char* value_buf_end = value_buf + DataTypeFormatString(value_buf, IM_ARRAYSIZE(value_buf), data_type, p_data, format);
-    if (g.LogEnabled)
-        LogSetNextTextDecoration("{", "}");
+
     RenderTextClipped(frame_bb.Min, frame_bb.Max, value_buf, value_buf_end, NULL, ImVec2(0.5f, 0.5f));
 
     if (label_size.x > 0.0f)
@@ -4918,13 +4903,6 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
         }
     }
 
-    // Log as text
-    if (g.LogEnabled && (!is_password || is_displaying_hint))
-    {
-        LogSetNextTextDecoration("{", "}");
-        LogRenderedText(&draw_pos, buf_display, buf_display_end);
-    }
-
     if (label_size.x > 0)
         RenderText(ImVec2(frame_bb.Max.x + style.ItemInnerSpacing.x, frame_bb.Min.y + style.FramePadding.y), label);
 
@@ -6164,8 +6142,6 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
         if (flags & ImGuiTreeNodeFlags_ClipLabelForTrailingButton)
             frame_bb.Max.x -= g.FontSize + style.FramePadding.x;
 
-        if (g.LogEnabled)
-            LogSetNextTextDecoration("###", "###");
         RenderTextClipped(text_pos, frame_bb.Max, label, label_end, &label_size);
     }
     else
@@ -6181,8 +6157,7 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
             RenderBullet(window->DrawList, ImVec2(text_pos.x - text_offset_x * 0.5f, text_pos.y + g.FontSize * 0.5f), text_col);
         else if (!is_leaf)
             RenderArrow(window->DrawList, ImVec2(text_pos.x - text_offset_x + padding.x, text_pos.y + g.FontSize * 0.15f), text_col, is_open ? ImGuiDir_Down : ImGuiDir_Right, 0.70f);
-        if (g.LogEnabled)
-            LogSetNextTextDecoration(">", NULL);
+
         RenderText(text_pos, label, label_end, false);
     }
 
