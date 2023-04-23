@@ -135,7 +135,6 @@ struct ImGuiLastItemData;           // Status storage for last submitted items
 struct ImGuiLocEntry;               // A localization entry.
 struct ImGuiMenuColumns;            // Simple column measurement, currently used for MenuItem() only
 struct ImGuiNavItemData;            // Result of a gamepad/keyboard directional navigation move query result
-struct ImGuiMetricsConfig;          // Storage for ShowMetricsWindow() and DebugNodeXXX() functions
 struct ImGuiNextWindowData;         // Storage for SetNextWindow** functions
 struct ImGuiNextItemData;           // Storage for SetNextItem** functions
 struct ImGuiOldColumnData;          // Storage data for a single column for legacy Columns() api
@@ -1674,20 +1673,6 @@ enum ImGuiDebugLogFlags_
     ImGuiDebugLogFlags_OutputToTTY      = 1 << 10,  // Also send output to TTY
 };
 
-struct ImGuiMetricsConfig
-{
-    bool        ShowDebugLog = false;
-    bool        ShowStackTool = false;
-    bool        ShowWindowsRects = false;
-    bool        ShowWindowsBeginOrder = false;
-    bool        ShowTablesRects = false;
-    bool        ShowDrawCmdMesh = true;
-    bool        ShowDrawCmdBoundingBoxes = true;
-    bool        ShowAtlasTintedWithTextColor = false;
-    int         ShowWindowsRectsType = -1;
-    int         ShowTablesRectsType = -1;
-};
-
 struct ImGuiStackLevelInfo
 {
     ImGuiID                 ID;
@@ -2010,7 +1995,6 @@ struct ImGuiContext
     bool                    DebugItemPickerActive;              // Item picker is active (started with DebugStartItemPicker())
     ImU8                    DebugItemPickerMouseButton;
     ImGuiID                 DebugItemPickerBreakId;             // Will call IM_DEBUG_BREAK() when encountering this ID
-    ImGuiMetricsConfig      DebugMetricsConfig;
     ImGuiStackTool          DebugStackTool;
 
     // Misc
@@ -3181,10 +3165,8 @@ namespace ImGui
     IMGUI_API void          DebugLocateItemResolveWithLastItem();
     inline void             DebugDrawItemRect(ImU32 col = IM_COL32(255,0,0,255))    { ImGuiContext& g = *GImGui; ImGuiWindow* window = g.CurrentWindow; GetForegroundDrawList(window)->AddRect(g.LastItemData.Rect.Min, g.LastItemData.Rect.Max, col); }
     inline void             DebugStartItemPicker()                                  { ImGuiContext& g = *GImGui; g.DebugItemPickerActive = true; }
-    IMGUI_API void          ShowFontAtlas(ImFontAtlas* atlas);
     IMGUI_API void          DebugHookIdInfo(ImGuiID id, ImGuiDataType data_type, const void* data_id, const void* data_id_end);
     IMGUI_API void          DebugNodeColumns(ImGuiOldColumns* columns);
-    IMGUI_API void          DebugNodeDrawList(ImGuiWindow* window, const ImDrawList* draw_list, const char* label);
     IMGUI_API void          DebugNodeDrawCmdShowMeshAndBoundingBox(ImDrawList* out_draw_list, const ImDrawList* draw_list, const ImDrawCmd* draw_cmd, bool show_mesh, bool show_aabb);
     IMGUI_API void          DebugNodeFont(ImFont* font);
     IMGUI_API void          DebugNodeFontGlyph(ImFont* font, const ImFontGlyph* glyph);

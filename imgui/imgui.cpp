@@ -12281,9 +12281,7 @@ static void SetPlatformImeDataFn_DefaultImpl(ImGuiViewport*, ImGuiPlatformImeDat
 // - RenderViewportsThumbnails() [Internal]
 // - DebugTextEncoding()
 // - MetricsHelpMarker() [Internal]
-// - ShowFontAtlas() [Internal]
 // - DebugNodeColumns() [Internal]
-// - DebugNodeDrawList() [Internal]
 // - DebugNodeDrawCmdShowMeshAndBoundingBox() [Internal]
 // - DebugNodeFont() [Internal]
 // - DebugNodeFontGlyph() [Internal]
@@ -12447,28 +12445,6 @@ static void MetricsHelpMarker(const char* desc)
     }
 }
 
-// [DEBUG] List fonts in a font atlas and display its texture
-void ImGui::ShowFontAtlas(ImFontAtlas* atlas)
-{
-    for (int i = 0; i < atlas->Fonts.Size; i++)
-    {
-        ImFont* font = atlas->Fonts[i];
-        PushID(font);
-        DebugNodeFont(font);
-        PopID();
-    }
-    if (TreeNode("Font Atlas", "Font Atlas (%dx%d pixels)", atlas->TexWidth, atlas->TexHeight))
-    {
-        ImGuiContext& g = *GImGui;
-        ImGuiMetricsConfig* cfg = &g.DebugMetricsConfig;
-        Checkbox("Tint with Text Color", &cfg->ShowAtlasTintedWithTextColor); // Using text color ensure visibility of core atlas data, but will alter custom colored icons
-        ImVec4 tint_col = cfg->ShowAtlasTintedWithTextColor ? GetStyleColorVec4(ImGuiCol_Text) : ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-        ImVec4 border_col = GetStyleColorVec4(ImGuiCol_Border);
-        Image(atlas->TexID, ImVec2((float)atlas->TexWidth, (float)atlas->TexHeight), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), tint_col, border_col);
-        TreePop();
-    }
-}
-
 // [DEBUG] Display contents of Columns
 void ImGui::DebugNodeColumns(ImGuiOldColumns* columns)
 {
@@ -12477,100 +12453,6 @@ void ImGui::DebugNodeColumns(ImGuiOldColumns* columns)
     BulletText("Width: %.1f (MinX: %.1f, MaxX: %.1f)", columns->OffMaxX - columns->OffMinX, columns->OffMinX, columns->OffMaxX);
     for (int column_n = 0; column_n < columns->Columns.Size; column_n++)
         BulletText("Column %02d: OffsetNorm %.3f (= %.1f px)", column_n, columns->Columns[column_n].OffsetNorm, GetColumnOffsetFromNorm(columns, columns->Columns[column_n].OffsetNorm));
-    TreePop();
-}
-
-// [DEBUG] Display contents of ImDrawList
-void ImGui::DebugNodeDrawList(ImGuiWindow* window, const ImDrawList* draw_list, const char* label)
-{
-    ImGuiContext& g = *GImGui;
-    ImGuiMetricsConfig* cfg = &g.DebugMetricsConfig;
-    int cmd_count = draw_list->CmdBuffer.Size;
-    if (cmd_count > 0 && draw_list->CmdBuffer.back().ElemCount == 0 && draw_list->CmdBuffer.back().UserCallback == NULL)
-        cmd_count--;
-    bool node_open = TreeNode(draw_list, "%s: '%s' %d vtx, %d indices, %d cmds", label, draw_list->_OwnerName ? draw_list->_OwnerName : "", draw_list->VtxBuffer.Size, draw_list->IdxBuffer.Size, cmd_count);
-    if (draw_list == GetWindowDrawList())
-    {
-        SameLine();
-        TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "CURRENTLY APPENDING"); // Can't display stats for active draw list! (we don't have the data double-buffered)
-        if (node_open)
-            TreePop();
-        return;
-    }
-
-    ImDrawList* fg_draw_list = GetForegroundDrawList(window); // Render additional visuals into the top-most draw list
-    if (window && IsItemHovered() && fg_draw_list)
-        fg_draw_list->AddRect(window->Pos, window->Pos + window->Size, IM_COL32(255, 255, 0, 255));
-    if (!node_open)
-        return;
-
-    if (window && !window->WasActive)
-        TextDisabled("Warning: owning Window is inactive. This DrawList is not being rendered!");
-
-    for (const ImDrawCmd* pcmd = draw_list->CmdBuffer.Data; pcmd < draw_list->CmdBuffer.Data + cmd_count; pcmd++)
-    {
-        if (pcmd->UserCallback)
-        {
-            BulletText("Callback %p, user_data %p", pcmd->UserCallback, pcmd->UserCallbackData);
-            continue;
-        }
-
-        char buf[300];
-        ImFormatString(buf, IM_ARRAYSIZE(buf), "DrawCmd:%5d tris, Tex 0x%p, ClipRect (%4.0f,%4.0f)-(%4.0f,%4.0f)",
-            pcmd->ElemCount / 3, (void*)(intptr_t)pcmd->TextureId,
-            pcmd->ClipRect.x, pcmd->ClipRect.y, pcmd->ClipRect.z, pcmd->ClipRect.w);
-        bool pcmd_node_open = TreeNode((void*)(pcmd - draw_list->CmdBuffer.begin()), "%s", buf);
-        if (IsItemHovered() && (cfg->ShowDrawCmdMesh || cfg->ShowDrawCmdBoundingBoxes) && fg_draw_list)
-            DebugNodeDrawCmdShowMeshAndBoundingBox(fg_draw_list, draw_list, pcmd, cfg->ShowDrawCmdMesh, cfg->ShowDrawCmdBoundingBoxes);
-        if (!pcmd_node_open)
-            continue;
-
-        // Calculate approximate coverage area (touched pixel count)
-        // This will be in pixels squared as long there's no post-scaling happening to the renderer output.
-        const ImDrawIdx* idx_buffer = (draw_list->IdxBuffer.Size > 0) ? draw_list->IdxBuffer.Data : NULL;
-        const ImDrawVert* vtx_buffer = draw_list->VtxBuffer.Data + pcmd->VtxOffset;
-        float total_area = 0.0f;
-        for (unsigned int idx_n = pcmd->IdxOffset; idx_n < pcmd->IdxOffset + pcmd->ElemCount; )
-        {
-            ImVec2 triangle[3];
-            for (int n = 0; n < 3; n++, idx_n++)
-                triangle[n] = vtx_buffer[idx_buffer ? idx_buffer[idx_n] : idx_n].pos;
-            total_area += ImTriangleArea(triangle[0], triangle[1], triangle[2]);
-        }
-
-        // Display vertex information summary. Hover to get all triangles drawn in wire-frame
-        ImFormatString(buf, IM_ARRAYSIZE(buf), "Mesh: ElemCount: %d, VtxOffset: +%d, IdxOffset: +%d, Area: ~%0.f px", pcmd->ElemCount, pcmd->VtxOffset, pcmd->IdxOffset, total_area);
-        Selectable(buf);
-        if (IsItemHovered() && fg_draw_list)
-            DebugNodeDrawCmdShowMeshAndBoundingBox(fg_draw_list, draw_list, pcmd, true, false);
-
-        // Display individual triangles/vertices. Hover on to get the corresponding triangle highlighted.
-        ImGuiListClipper clipper;
-        clipper.Begin(pcmd->ElemCount / 3); // Manually coarse clip our print out of individual vertices to save CPU, only items that may be visible.
-        while (clipper.Step())
-            for (int prim = clipper.DisplayStart, idx_i = pcmd->IdxOffset + clipper.DisplayStart * 3; prim < clipper.DisplayEnd; prim++)
-            {
-                char* buf_p = buf, * buf_end = buf + IM_ARRAYSIZE(buf);
-                ImVec2 triangle[3];
-                for (int n = 0; n < 3; n++, idx_i++)
-                {
-                    const ImDrawVert& v = vtx_buffer[idx_buffer ? idx_buffer[idx_i] : idx_i];
-                    triangle[n] = v.pos;
-                    buf_p += ImFormatString(buf_p, buf_end - buf_p, "%s %04d: pos (%8.2f,%8.2f), uv (%.6f,%.6f), col %08X\n",
-                        (n == 0) ? "Vert:" : "     ", idx_i, v.pos.x, v.pos.y, v.uv.x, v.uv.y, v.col);
-                }
-
-                Selectable(buf, false);
-                if (fg_draw_list && IsItemHovered())
-                {
-                    ImDrawListFlags backup_flags = fg_draw_list->Flags;
-                    fg_draw_list->Flags &= ~ImDrawListFlags_AntiAliasedLines; // Disable AA on triangle outlines is more readable for very large and thin triangles.
-                    fg_draw_list->AddPolyline(triangle, 3, IM_COL32(255, 255, 0, 255), ImDrawFlags_Closed, 1.0f);
-                    fg_draw_list->Flags = backup_flags;
-                }
-            }
-        TreePop();
-    }
     TreePop();
 }
 
@@ -12761,26 +12643,6 @@ void ImGui::DebugNodeTabBar(ImGuiTabBar* tab_bar, const char* label)
     }
 }
 
-void ImGui::DebugNodeViewport(ImGuiViewportP* viewport)
-{
-    SetNextItemOpen(true, ImGuiCond_Once);
-    if (TreeNode("viewport0", "Viewport #%d", 0))
-    {
-        ImGuiWindowFlags flags = viewport->Flags;
-        BulletText("Main Pos: (%.0f,%.0f), Size: (%.0f,%.0f)\nWorkArea Offset Left: %.0f Top: %.0f, Right: %.0f, Bottom: %.0f",
-            viewport->Pos.x, viewport->Pos.y, viewport->Size.x, viewport->Size.y,
-            viewport->WorkOffsetMin.x, viewport->WorkOffsetMin.y, viewport->WorkOffsetMax.x, viewport->WorkOffsetMax.y);
-        BulletText("Flags: 0x%04X =%s%s%s", viewport->Flags,
-            (flags & ImGuiViewportFlags_IsPlatformWindow)  ? " IsPlatformWindow"  : "",
-            (flags & ImGuiViewportFlags_IsPlatformMonitor) ? " IsPlatformMonitor" : "",
-            (flags & ImGuiViewportFlags_OwnedByApp)        ? " OwnedByApp"        : "");
-        for (int layer_i = 0; layer_i < IM_ARRAYSIZE(viewport->DrawDataBuilder.Layers); layer_i++)
-            for (int draw_list_i = 0; draw_list_i < viewport->DrawDataBuilder.Layers[layer_i].Size; draw_list_i++)
-                DebugNodeDrawList(NULL, viewport->DrawDataBuilder.Layers[layer_i][draw_list_i], "DrawList");
-        TreePop();
-    }
-}
-
 void ImGui::DebugNodeWindow(ImGuiWindow* window, const char* label)
 {
     if (window == NULL)
@@ -12804,7 +12666,7 @@ void ImGui::DebugNodeWindow(ImGuiWindow* window, const char* label)
         TextDisabled("Note: some memory buffers have been compacted/freed.");
 
     ImGuiWindowFlags flags = window->Flags;
-    DebugNodeDrawList(window, window->DrawList, "DrawList");
+
     BulletText("Pos: (%.1f,%.1f), Size: (%.1f,%.1f), ContentSize (%.1f,%.1f) Ideal (%.1f,%.1f)", window->Pos.x, window->Pos.y, window->Size.x, window->Size.y, window->ContentSize.x, window->ContentSize.y, window->ContentSizeIdeal.x, window->ContentSizeIdeal.y);
     BulletText("Flags: 0x%08X (%s%s%s%s%s%s%s%s%s..)", flags,
         (flags & ImGuiWindowFlags_ChildWindow)  ? "Child " : "",      (flags & ImGuiWindowFlags_Tooltip)     ? "Tooltip "   : "",  (flags & ImGuiWindowFlags_Popup) ? "Popup " : "",
@@ -13215,10 +13077,7 @@ void ImGui::ShowStackToolWindow(bool* p_open)
 
 #else
 
-void ImGui::ShowMetricsWindow(bool*) {}
-void ImGui::ShowFontAtlas(ImFontAtlas*) {}
 void ImGui::DebugNodeColumns(ImGuiOldColumns*) {}
-void ImGui::DebugNodeDrawList(ImGuiWindow*, const ImDrawList*, const char*) {}
 void ImGui::DebugNodeDrawCmdShowMeshAndBoundingBox(ImDrawList*, const ImDrawList*, const ImDrawCmd*, bool, bool) {}
 void ImGui::DebugNodeFont(ImFont*) {}
 void ImGui::DebugNodeStorage(ImGuiStorage*, const char*) {}
