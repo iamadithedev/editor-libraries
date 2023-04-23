@@ -4983,42 +4983,6 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
         return value_changed;
 }
 
-void ImGui::DebugNodeInputTextState(ImGuiInputTextState* state)
-{
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
-    ImGuiContext& g = *GImGui;
-    ImStb::STB_TexteditState* stb_state = &state->Stb;
-    ImStb::StbUndoState* undo_state = &stb_state->undostate;
-    Text("ID: 0x%08X, ActiveID: 0x%08X", state->ID, g.ActiveId);
-    DebugLocateItemOnHover(state->ID);
-    Text("CurLenW: %d, CurLenA: %d, Cursor: %d, Selection: %d..%d", state->CurLenW, state->CurLenA, stb_state->cursor, stb_state->select_start, stb_state->select_end);
-    Text("has_preferred_x: %d (%.2f)", stb_state->has_preferred_x, stb_state->preferred_x);
-    Text("undo_point: %d, redo_point: %d, undo_char_point: %d, redo_char_point: %d", undo_state->undo_point, undo_state->redo_point, undo_state->undo_char_point, undo_state->redo_char_point);
-    if (BeginChild("undopoints", ImVec2(0.0f, GetTextLineHeight() * 15), true)) // Visualize undo state
-    {
-        PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-        for (int n = 0; n < STB_TEXTEDIT_UNDOSTATECOUNT; n++)
-        {
-            ImStb::StbUndoRecord* undo_rec = &undo_state->undo_rec[n];
-            const char undo_rec_type = (n < undo_state->undo_point) ? 'u' : (n >= undo_state->redo_point) ? 'r' : ' ';
-            if (undo_rec_type == ' ')
-                BeginDisabled();
-            char buf[64] = "";
-            if (undo_rec_type != ' ' && undo_rec->char_storage != -1)
-                ImTextStrToUtf8(buf, IM_ARRAYSIZE(buf), undo_state->undo_char + undo_rec->char_storage, undo_state->undo_char + undo_rec->char_storage + undo_rec->insert_length);
-            Text("%c [%02d] where %03d, insert %03d, delete %03d, char_storage %03d \"%s\"",
-                undo_rec_type, n, undo_rec->where, undo_rec->insert_length, undo_rec->delete_length, undo_rec->char_storage, buf);
-            if (undo_rec_type == ' ')
-                EndDisabled();
-        }
-        PopStyleVar();
-    }
-    EndChild();
-#else
-    IM_UNUSED(state);
-#endif
-}
-
 //-------------------------------------------------------------------------
 // [SECTION] Widgets: ColorEdit, ColorPicker, ColorButton, etc.
 //-------------------------------------------------------------------------
