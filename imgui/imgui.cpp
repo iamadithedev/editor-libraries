@@ -4531,7 +4531,6 @@ static void InitOrLoadWindowSettings(ImGuiWindow* window, ImGuiWindowSettings* s
 static ImGuiWindow* CreateNewWindow(const char* name, ImGuiWindowFlags flags)
 {
     // Create window the first time
-    //IMGUI_DEBUG_LOG("CreateNewWindow '%s', flags = 0x%08X\n", name, flags);
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = IM_NEW(ImGuiWindow)(&g, name);
     window->Flags = flags;
@@ -6558,7 +6557,6 @@ void ImGui::SetKeyboardFocusHere(int offset)
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
     IM_ASSERT(offset >= -1);    // -1 is allowed but not below
-    IMGUI_DEBUG_LOG_ACTIVEID("SetKeyboardFocusHere(%d) in window \"%s\"\n", offset, window->Name);
 
     // It makes sense in the vast majority of cases to never interrupt a drag and drop.
     // When we refactor this function into ActivateItem() we may want to make this an option.
@@ -6566,7 +6564,6 @@ void ImGui::SetKeyboardFocusHere(int offset)
     // is also automatically dropped in the event g.ActiveId is stolen.
     if (g.DragDropActive || g.MovingWindow != NULL)
     {
-        IMGUI_DEBUG_LOG_ACTIVEID("SetKeyboardFocusHere() ignored while DragDropActive!\n");
         return;
     }
 
@@ -7553,7 +7550,7 @@ static void LockWheelingWindow(ImGuiWindow* window, float wheel_amount)
         g.WheelingWindowReleaseTimer = 0.0f;
     if (g.WheelingWindow == window)
         return;
-    IMGUI_DEBUG_LOG_IO("LockWheelingWindow() \"%s\"\n", window ? window->Name : "NULL");
+
     g.WheelingWindow = window;
     g.WheelingWindowRefMousePos = g.IO.MousePos;
     if (window == NULL)
@@ -7621,7 +7618,6 @@ void ImGui::UpdateMouseWheel()
     wheel.x = TestKeyOwner(ImGuiKey_MouseWheelX, ImGuiKeyOwner_None) ? g.IO.MouseWheelH : 0.0f;
     wheel.y = TestKeyOwner(ImGuiKey_MouseWheelY, ImGuiKeyOwner_None) ? g.IO.MouseWheel : 0.0f;
 
-    //IMGUI_DEBUG_LOG("MouseWheel X:%.3f Y:%.3f\n", wheel_x, wheel_y);
     ImGuiWindow* mouse_window = g.WheelingWindow ? g.WheelingWindow : g.HoveredWindow;
     if (!mouse_window || mouse_window->Collapsed)
         return;
@@ -8959,7 +8955,6 @@ void ImGui::OpenPopupEx(ImGuiID id, ImGuiPopupFlags popup_flags)
     popup_ref.OpenPopupPos = NavCalcPreferredRefPos();
     popup_ref.OpenMousePos = IsMousePosValid(&g.IO.MousePos) ? g.IO.MousePos : popup_ref.OpenPopupPos;
 
-    IMGUI_DEBUG_LOG_POPUP("[popup] OpenPopupEx(0x%08X)\n", id);
     if (g.OpenPopupStack.Size < current_stack_size + 1)
     {
         g.OpenPopupStack.push_back(popup_ref);
@@ -9028,7 +9023,6 @@ void ImGui::ClosePopupsOverWindow(ImGuiWindow* ref_window, bool restore_focus_to
     }
     if (popup_count_to_keep < g.OpenPopupStack.Size) // This test is not required but it allows to set a convenient breakpoint on the statement below
     {
-        IMGUI_DEBUG_LOG_POPUP("[popup] ClosePopupsOverWindow(\"%s\")\n", ref_window ? ref_window->Name : "<NULL>");
         ClosePopupToLevel(popup_count_to_keep, restore_focus_to_window_under_popup);
     }
 }
@@ -9051,7 +9045,6 @@ void ImGui::ClosePopupsExceptModals()
 void ImGui::ClosePopupToLevel(int remaining, bool restore_focus_to_window_under_popup)
 {
     ImGuiContext& g = *GImGui;
-    IMGUI_DEBUG_LOG_POPUP("[popup] ClosePopupToLevel(%d), restore_focus_to_window_under_popup=%d\n", remaining, restore_focus_to_window_under_popup);
     IM_ASSERT(remaining >= 0 && remaining < g.OpenPopupStack.Size);
 
     // Trim open popup stack
@@ -9097,7 +9090,6 @@ void ImGui::CloseCurrentPopup()
             break;
         popup_idx--;
     }
-    IMGUI_DEBUG_LOG_POPUP("[popup] CloseCurrentPopup %d -> %d\n", g.BeginPopupStack.Size - 1, popup_idx);
     ClosePopupToLevel(popup_idx, true);
 
     // A common pattern is to close a popup when selecting a menu item/selectable that will open another window.
@@ -9412,7 +9404,6 @@ void ImGui::SetNavWindow(ImGuiWindow* window)
     ImGuiContext& g = *GImGui;
     if (g.NavWindow != window)
     {
-        IMGUI_DEBUG_LOG_FOCUS("[focus] SetNavWindow(\"%s\")\n", window ? window->Name : "<NULL>");
         g.NavWindow = window;
     }
     g.NavInitRequest = g.NavMoveSubmitted = g.NavMoveScoringItems = false;
@@ -9875,7 +9866,7 @@ void ImGui::NavInitWindow(ImGuiWindow* window, bool force_reinit)
     bool init_for_nav = false;
     if (window == window->RootWindow || (window->Flags & ImGuiWindowFlags_Popup) || (window->NavLastIds[0] == 0) || force_reinit)
         init_for_nav = true;
-    IMGUI_DEBUG_LOG_NAV("[nav] NavInitRequest: from NavInitWindow(), init_for_nav=%d, window=\"%s\", layer=%d\n", init_for_nav, window->Name, g.NavLayer);
+
     if (init_for_nav)
     {
         SetNavID(0, g.NavLayer, window->NavRootFocusScopeId, ImRect());
@@ -10126,7 +10117,6 @@ void ImGui::NavUpdateCreateMoveRequest()
         // (preserve most state, which were already set by the NavMoveRequestForward() function)
         IM_ASSERT(g.NavMoveDir != ImGuiDir_None && g.NavMoveClipDir != ImGuiDir_None);
         IM_ASSERT(g.NavMoveFlags & ImGuiNavMoveFlags_Forwarded);
-        IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequestForward %d\n", g.NavMoveDir);
     }
     else
     {
@@ -10306,7 +10296,6 @@ void ImGui::NavMoveRequestApplyResult()
     }
 
     // Focus
-    IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequest: result NavID 0x%08X in Layer %d Window \"%s\"\n", result->ID, g.NavLayer, g.NavWindow->Name);
     SetNavID(result->ID, g.NavLayer, result->FocusScopeId, result->RectRel);
 
     // Tabbing: Activates Inputable or Focus non-Inputable
@@ -11084,7 +11073,6 @@ const ImGuiPayload* ImGui::AcceptDragDropPayload(const char* type, ImGuiDragDrop
     g.DragDropAcceptFlags = flags;
     g.DragDropAcceptIdCurr = g.DragDropTargetId;
     g.DragDropAcceptIdCurrRectSurface = r_surface;
-    //IMGUI_DEBUG_LOG("AcceptDragDropPayload(): %08X: accept\n", g.DragDropTargetId);
 
     // Render default drop visuals
     payload.Preview = was_accepted_previously;
