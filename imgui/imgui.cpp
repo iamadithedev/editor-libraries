@@ -5538,18 +5538,6 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
             }
         }
 
-        // [Test Engine] Register whole window in the item system (before submitting further decorations)
-#ifdef IMGUI_ENABLE_TEST_ENGINE
-        if (g.TestEngineHookItems)
-        {
-            IM_ASSERT(window->IDStack.Size == 1);
-            window->IDStack.Size = 0; // As window->IDStack[0] == window->ID here, make sure TestEngine doesn't erroneously see window as parent of itself.
-            IMGUI_TEST_ENGINE_ITEM_ADD(window->ID, window->Rect(), NULL);
-            IMGUI_TEST_ENGINE_ITEM_INFO(window->ID, window->Name, (g.HoveredWindow == window) ? ImGuiItemStatusFlags_HoveredRect : 0);
-            window->IDStack.Size = 1;
-        }
-#endif
-
         // Handle manual resize: Resize Grips, Borders, Gamepad
         int border_held = -1;
         ImU32 resize_grip_col[4] = {};
@@ -5783,12 +5771,6 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
 #ifndef IMGUI_DISABLE_DEBUG_TOOLS
         if (g.DebugLocateId != 0 && (window->ID == g.DebugLocateId || window->MoveId == g.DebugLocateId))
             DebugLocateItemResolveWithLastItem();
-#endif
-
-        // [Test Engine] Register title bar / tab with MoveId.
-#ifdef IMGUI_ENABLE_TEST_ENGINE
-        if (!(window->Flags & ImGuiWindowFlags_NoTitleBar))
-            IMGUI_TEST_ENGINE_ITEM_ADD(g.LastItemData.ID, g.LastItemData.Rect, &g.LastItemData);
 #endif
     }
     else
@@ -8190,11 +8172,6 @@ bool ImGui::ItemAdd(const ImRect& bb, ImGuiID id, const ImRect* nav_bb_arg, ImGu
         IM_ASSERT(id != window->ID && "Cannot have an empty ID at the root of a window. If you need an empty label, use ## and read the FAQ about how the ID Stack works!");
     }
     g.NextItemData.Flags = ImGuiNextItemDataFlags_None;
-
-#ifdef IMGUI_ENABLE_TEST_ENGINE
-    if (id != 0)
-        IMGUI_TEST_ENGINE_ITEM_ADD(id, g.LastItemData.NavRect, &g.LastItemData);
-#endif
 
     // Clipping test
     // (FIXME: This is a modified copy of IsClippedEx() so we can reuse the is_rect_visible value)
