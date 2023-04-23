@@ -2035,9 +2035,6 @@ void ImGui::TableEndCell(ImGuiTable* table)
     ImGuiTableColumn* column = &table->Columns[table->CurrentColumn];
     ImGuiWindow* window = table->InnerWindow;
 
-    if (window->DC.IsSetPos)
-        ErrorCheckUsingSetCursorPosToExtendParentBoundaries();
-
     // Report maximum position so we can infer content size per column.
     float* p_max_pos_x;
     if (table->RowFlags & ImGuiTableRowFlags_Headers)

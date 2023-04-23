@@ -219,19 +219,6 @@ namespace ImStb
 #endif
 #endif
 
-// Debug Logging for ShowDebugLogWindow(). This is designed for relatively rare events so please don't spam.
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
-#define IMGUI_DEBUG_LOG(...)            ImGui::DebugLog(__VA_ARGS__)
-#else
-#define IMGUI_DEBUG_LOG(...)            ((void)0)
-#endif
-#define IMGUI_DEBUG_LOG_ACTIVEID(...)   do { if (g.DebugLogFlags & ImGuiDebugLogFlags_EventActiveId) IMGUI_DEBUG_LOG(__VA_ARGS__); } while (0)
-#define IMGUI_DEBUG_LOG_FOCUS(...)      do { if (g.DebugLogFlags & ImGuiDebugLogFlags_EventFocus)    IMGUI_DEBUG_LOG(__VA_ARGS__); } while (0)
-#define IMGUI_DEBUG_LOG_POPUP(...)      do { if (g.DebugLogFlags & ImGuiDebugLogFlags_EventPopup)    IMGUI_DEBUG_LOG(__VA_ARGS__); } while (0)
-#define IMGUI_DEBUG_LOG_NAV(...)        do { if (g.DebugLogFlags & ImGuiDebugLogFlags_EventNav)      IMGUI_DEBUG_LOG(__VA_ARGS__); } while (0)
-#define IMGUI_DEBUG_LOG_CLIPPER(...)    do { if (g.DebugLogFlags & ImGuiDebugLogFlags_EventClipper)  IMGUI_DEBUG_LOG(__VA_ARGS__); } while (0)
-#define IMGUI_DEBUG_LOG_IO(...)         do { if (g.DebugLogFlags & ImGuiDebugLogFlags_EventIO)       IMGUI_DEBUG_LOG(__VA_ARGS__); } while (0)
-
 // Static Asserts
 #define IM_STATIC_ASSERT(_COND)         static_assert(_COND, "")
 
@@ -3140,15 +3127,6 @@ namespace ImGui
     IMGUI_API void          GcCompactTransientMiscBuffers();
     IMGUI_API void          GcCompactTransientWindowBuffers(ImGuiWindow* window);
     IMGUI_API void          GcAwakeTransientWindowBuffers(ImGuiWindow* window);
-
-    // Debug Log
-    IMGUI_API void          DebugLog(const char* fmt, ...) IM_FMTARGS(1);
-    IMGUI_API void          DebugLogV(const char* fmt, va_list args) IM_FMTLIST(1);
-
-    // Debug Tools
-    IMGUI_API void          ErrorCheckEndFrameRecover(ImGuiErrorLogCallback log_callback, void* user_data = NULL);
-    IMGUI_API void          ErrorCheckEndWindowRecover(ImGuiErrorLogCallback log_callback, void* user_data = NULL);
-    IMGUI_API void          ErrorCheckUsingSetCursorPosToExtendParentBoundaries();
 
     // Obsolete functions
 #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
