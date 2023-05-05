@@ -23,9 +23,6 @@
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
 #include <stdio.h>
-#if defined(__APPLE__)
-#include <TargetConditionals.h>
-#endif
 
 // Clang/GCC warnings with -Weverything
 #if defined(__clang__)
@@ -206,14 +203,7 @@ bool    ImGui_ImplOpenGL3_Init(const char* glsl_version)
     bd->GlVersion = (GLuint)(major * 100 + minor * 10);
 
     bd->UseBufferSubData = false;
-    /*
-    // Query vendor to enable glBufferSubData kludge
-#ifdef _WIN32
-    if (const char* vendor = (const char*)glGetString(GL_VENDOR))
-        if (strncmp(vendor, "Intel", 5) == 0)
-            bd->UseBufferSubData = true;
-#endif
-    */
+
 #else
     bd->GlVersion = 200; // GLES 2
 #endif
