@@ -105,9 +105,7 @@ static ImGuiKey ImGui_ImplGlfw_KeyToImGuiKey(int key)
         case GLFW_KEY_INSERT: return ImGuiKey_Insert;
         case GLFW_KEY_DELETE: return ImGuiKey_Delete;
         case GLFW_KEY_BACKSPACE: return ImGuiKey_Backspace;
-        case GLFW_KEY_SPACE: return ImGuiKey_Space;
         case GLFW_KEY_ENTER: return ImGuiKey_Enter;
-        case GLFW_KEY_ESCAPE: return ImGuiKey_Escape;
         case GLFW_KEY_APOSTROPHE: return ImGuiKey_Apostrophe;
         case GLFW_KEY_COMMA: return ImGuiKey_Comma;
         case GLFW_KEY_MINUS: return ImGuiKey_Minus;
