@@ -506,10 +506,10 @@ static void ImGui_ImplGlfw_UpdateMouseData()
             // (Optional) Fallback to provide mouse position when focused (ImGui_ImplGlfw_CursorPosCallback already provides this when hovered or captured)
             if (bd->MouseWindow == nullptr)
             {
-                double mouse_x, mouse_y;
+                float mouse_x, mouse_y;
                 glfwGetCursorPos(window, &mouse_x, &mouse_y);
-                bd->LastValidMousePos = ImVec2((float)mouse_x, (float)mouse_y);
-                io.AddMousePosEvent((float)mouse_x, (float)mouse_y);
+                bd->LastValidMousePos = ImVec2(mouse_x, mouse_y);
+                io.AddMousePosEvent(mouse_x, mouse_y);
             }
         }
     }
