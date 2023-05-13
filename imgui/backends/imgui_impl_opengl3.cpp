@@ -97,7 +97,7 @@ struct ImGui_ImplOpenGL3_VtxAttribState
 #endif
 
 // Functions
-bool    ImGui_ImplOpenGL3_Init(const char* glsl_version)
+bool    ImGui_ImplOpenGL3_Init()
 {
     ImGuiIO& io = ImGui::GetIO();
     IM_ASSERT(io.BackendRendererUserData == nullptr && "Already initialized a renderer backend!");
@@ -140,8 +140,7 @@ bool    ImGui_ImplOpenGL3_Init(const char* glsl_version)
         io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;  // We can honor the ImDrawCmd::VtxOffset field, allowing for large meshes.
 #endif
 
-    IM_ASSERT((int)strlen(glsl_version) + 2 < IM_ARRAYSIZE(bd->GlslVersionString));
-    strcpy(bd->GlslVersionString, glsl_version);
+    strcpy(bd->GlslVersionString, "#version 410");
     strcat(bd->GlslVersionString, "\n");
 
     // Make an arbitrary GL call (we don't actually need the result)
